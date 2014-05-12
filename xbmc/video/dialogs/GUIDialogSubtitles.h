@@ -41,6 +41,7 @@ public:
   CGUIDialogSubtitles(void);
   virtual ~CGUIDialogSubtitles(void);
   virtual bool OnMessage(CGUIMessage& message);
+  virtual void OnInitWindow();
   
   virtual void Announce(ANNOUNCEMENT::AnnouncementFlag flag, const char *sender, const char *message, const CVariant &data);
 
