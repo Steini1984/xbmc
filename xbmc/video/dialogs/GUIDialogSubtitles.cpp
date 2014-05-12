@@ -23,6 +23,7 @@
 #include "Application.h"
 #include "GUIDialogSubtitles.h"
 #include "addons/AddonManager.h"
+#include "interfaces/AnnouncementManager.h"
 #include "cores/IPlayer.h"
 #include "dialogs/GUIDialogKaiToast.h"
 #include "filesystem/AddonsDirectory.h"
@@ -105,6 +106,9 @@ CGUIDialogSubtitles::CGUIDialogSubtitles(void)
   m_serviceItems = new CFileItemList;
   m_pausedOnRun = false;
   m_updateSubsList = false;
+  m_autoDownloaded = false;
+
+  ANNOUNCEMENT::CAnnouncementManager::AddAnnouncer(this);
 }
 
 CGUIDialogSubtitles::~CGUIDialogSubtitles(void)
@@ -183,6 +187,12 @@ void CGUIDialogSubtitles::OnInitWindow()
   FillServices();
   CGUIWindow::OnInitWindow();
   Search();
+}
+
+void CGUIDialogSubtitles::Announce(ANNOUNCEMENT::AnnouncementFlag flag, const char *sender, const char *message, const CVariant &data)
+{
+  if(m_autoDownloaded && flag == ANNOUNCEMENT::Player && StringUtils::EqualsNoCase(message, "OnStop"))
+    m_autoDownloaded = false;
 }
 
 void CGUIDialogSubtitles::Process(unsigned int currentTime, CDirtyRegionList &dirtyregions)
@@ -358,6 +368,15 @@ void CGUIDialogSubtitles::OnSearchComplete(const CFileItemList *items)
   m_subtitles->Assign(*items);
   UpdateStatus(SEARCH_COMPLETE);
   m_updateSubsList = true;
+  
+  if(!m_autoDownloaded && !items->IsEmpty() && g_application.m_pPlayer->GetSubtitleCount() == 0 &&
+      CSettings::Get().GetBool("subtitles.downloadfirst")){
+      CFileItemPtr item = items->Get(0);
+      CLog::Log(LOGDEBUG, "%s - Automatically download first subtitle: %s", __FUNCTION__, item->GetLabel2().c_str());
+      m_autoDownloaded = true;
+      Download(*item);
+  }
+
   SetInvalid();
 }
 
