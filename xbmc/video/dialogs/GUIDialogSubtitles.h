@@ -21,6 +21,7 @@
  */
 
 #include <string>
+#include "interfaces/IAnnouncer.h"
 #include "guilib/GUIDialog.h"
 #include "threads/CriticalSection.h"
 #include "utils/JobManager.h"
@@ -34,13 +35,14 @@ enum SUBTITLE_STORAGEMODE
 class CFileItem;
 class CFileItemList;
 
-class CGUIDialogSubtitles : public CGUIDialog, CJobQueue
+class CGUIDialogSubtitles : public CGUIDialog, CJobQueue, ANNOUNCEMENT::IAnnouncer
 {
 public:
   CGUIDialogSubtitles(void);
   virtual ~CGUIDialogSubtitles(void);
   virtual bool OnMessage(CGUIMessage& message);
-  virtual void OnInitWindow();
+  
+  virtual void Announce(ANNOUNCEMENT::AnnouncementFlag flag, const char *sender, const char *message, const CVariant &data);
 
 protected:
   virtual void Process(unsigned int currentTime, CDirtyRegionList &dirtyregions);
@@ -71,4 +73,5 @@ protected:
   CStdString     m_strManualSearch;
   bool           m_pausedOnRun;
   bool           m_updateSubsList; ///< true if we need to update our subs list
+  bool           m_autoDownloaded; ///< true if previously we automatically downloaded subtitle
 };
